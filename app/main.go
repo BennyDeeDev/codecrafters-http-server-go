@@ -24,7 +24,8 @@ func HandleConnection(c net.Conn) {
 	p := strings.Split(s[1], "/")
 
 	if p[1] == "echo" {
-		res = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", 3, p[2])
+		res = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s",
+			len(p[2]), p[2])
 	} else if s[1] != "/" {
 		res = "HTTP/1.1 404 Not Found\r\n\r\n"
 	} else {
