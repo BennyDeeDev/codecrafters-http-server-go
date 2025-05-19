@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -28,6 +29,15 @@ func main() {
 
 	fmt.Println(string(req))
 
-	res := "HTTP/1.1 200 OK\r\n\r\n"
+	s := strings.Fields(string(req))
+
+	var res string
+
+	if s[1] != "/" {
+		res = "HTTP/1.1 404 Not Found\r\n\r\n"
+	} else {
+		res = "HTTP/1.1 200 OK\r\n\r\n"
+	}
+
 	c.Write([]byte(res))
 }
