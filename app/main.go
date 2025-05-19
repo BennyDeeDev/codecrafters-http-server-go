@@ -14,10 +14,20 @@ func main() {
 		fmt.Println("Failed to bind to port 4221")
 		os.Exit(1)
 	}
+	defer l.Close()
 
-	_, err = l.Accept()
+	c, err := l.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
+	defer c.Close()
+
+	req := make([]byte, 1024)
+	c.Read(req)
+
+	fmt.Println(string(req))
+
+	res := "HTTP/1.1 200 OK\r\n\r\n"
+	c.Write([]byte(res))
 }
