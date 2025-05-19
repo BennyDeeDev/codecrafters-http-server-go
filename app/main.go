@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -39,8 +40,9 @@ func HandleConnection(c net.Conn, directory *string) {
 	req := make([]byte, 1024)
 	c.Read(req)
 
-	fmt.Println(string(req))
 	s := strings.Fields(string(req))
+	b := strings.SplitN(string(req), "\r\n\r\n", 2)
+
 	fmt.Println(s)
 
 	var res string
@@ -60,19 +62,54 @@ func HandleConnection(c net.Conn, directory *string) {
 
 		return
 	} else if p[1] == "files" {
+
 		filePath := *directory + "/" + p[2]
-		f, err := os.ReadFile(filePath)
-		if err != nil {
-			fmt.Println("Error finding file: ", err.Error())
-			res = "HTTP/1.1 404 Not Found\r\n\r\n"
+
+		if s[0] == "POST" {
+			if len(b) < 2 {
+				res = "HTTP/1.1 400 Bad Request\r\n\r\n"
+				c.Write([]byte(res))
+
+				return
+			}
+
+			contentLength, err := strconv.Atoi(s[6])
+			if err != nil {
+				res = "HTTP/1.1 500 Server Error\r\n\r\n"
+				c.Write([]byte(res))
+
+				return
+			}
+
+			err = os.WriteFile(filePath, []byte(b[1])[:contentLength], 0644)
+			if err != nil {
+				fmt.Println("Error writing file: ", err.Error())
+				res = "HTTP/1.1 500 Server Error\r\n\r\n"
+				c.Write([]byte(res))
+
+				return
+			}
+
+			res = "HTTP/1.1 201 Created\r\n\r\n"
 			c.Write([]byte(res))
 
 			return
+
+		} else {
+			f, err := os.ReadFile(filePath)
+			if err != nil {
+				fmt.Println("Error finding file: ", err.Error())
+				res = "HTTP/1.1 404 Not Found\r\n\r\n"
+				c.Write([]byte(res))
+
+				return
+			}
+			res = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n", len(f))
+			c.Write([]byte(res))
+			c.Write(f)
+
+			return
 		}
-		res = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n", len(f))
-		c.Write([]byte(res))
-		c.Write(f)
-		return
 	} else if s[1] != "/" {
 		res = "HTTP/1.1 404 Not Found\r\n\r\n"
 		c.Write([]byte(res))
