@@ -26,6 +26,9 @@ func HandleConnection(c net.Conn) {
 	if p[1] == "echo" {
 		res = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s",
 			len(p[2]), p[2])
+	} else if p[1] == "user-agent" {
+		res = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s",
+			len(s[6]), s[6])
 	} else if s[1] != "/" {
 		res = "HTTP/1.1 404 Not Found\r\n\r\n"
 	} else {
